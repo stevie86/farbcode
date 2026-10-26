@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Farbcode — das tägliche Farb-Rate-Spiel</title>
+<meta name="description" content="Farbcode ist ein modernes Farb-Rate-Spiel: Form und Farbe statt nur Farbe, tägliches Rätsel, teilbare Ergebnisse. Kein Konto, kein Tracking, kein Server.">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#f7f5f0" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#14171e" media="(prefers-color-scheme: dark)">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23f7f5f0'/%3E%3Ccircle cx='11' cy='11' r='5' fill='%23d64045'/%3E%3Crect x='16' y='6' width='10' height='10' rx='2' fill='%233b6fd4'/%3E%3Cpath d='M11 18 L16 27 L6 27 Z' fill='%23e8a50c'/%3E%3Cpath d='M21 18 L26 23 L21 28 L16 23 Z' fill='%233f9a52'/%3E%3C/svg%3E">
+</head>
+<body>
+<a class="skip-link" href="#board">Zum Spiel springen</a>
+
+<header class="site-header">
+  <div class="wrap header-inner">
+    <div class="brand">
+      <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+        <circle cx="9" cy="9" r="5.5" fill="#d64045"/>
+        <rect x="17" y="3.5" width="11" height="11" rx="2.5" fill="#3b6fd4"/>
+        <path d="M9 17 L15 27 L3 27 Z" fill="#e8a50c"/>
+        <path d="M22.5 17 L28 22.5 L22.5 28 L17 22.5 Z" fill="#3f9a52"/>
+      </svg>
+      <div>
+        <h1>Farbcode</h1>
+        <p class="tagline" data-i18n="tagline">Raten, nicht erraten. Form und Farbe.</p>
+      </div>
+    </div>
+    <div class="header-tools">
+      <button type="button" id="lang-toggle" class="ghost-btn" aria-label="Sprache wechseln / Switch language">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 3 2.5 15 0 18M12 3c-2.5 3-2.5 15 0 18"/></svg>
+        <span id="lang-label">EN</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <nav class="mode-tabs" aria-label="Spielmodus">
+    <button type="button" class="mode-tab" data-mode="daily" aria-pressed="true">
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+      <span data-i18n="mode.daily">Tagesrätsel</span>
+    </button>
+    <button type="button" class="mode-tab" data-mode="solo" aria-pressed="false">
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M9 12h6"/></svg>
+      <span data-i18n="mode.solo">Freies Spiel</span>
+    </button>
+    <button type="button" class="mode-tab" data-mode="duo" aria-pressed="false">
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="9" cy="8" r="3.5"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17" cy="9" r="2.5"/><path d="M15.5 14.2c2.6.5 4.5 2.8 4.5 5.8"/></svg>
+      <span data-i18n="mode.duo">Zu zweit</span>
+    </button>
+  </nav>
+
+  <div class="layout">
+    <section class="col-main" aria-labelledby="board-heading">
+      <h2 id="board-heading" class="sr-only">Spielbrett</h2>
+
+      <!-- Duo's secret-code setup -->
+      <div id="duo-setup" class="panel hidden">
+        <h3 data-i18n="duo.setupTitle">Geheimcode eingeben</h3>
+        <p class="panel-text" data-i18n="duo.setupText">Der erste Spieler legt die Kombi fest. Danach wird das Gerät weitergegeben — der Code bleibt verdeckt, bis das Spiel endet.</p>
+        <div id="duo-slots" class="slot-row" role="group" aria-labelledby="duo-setup"></div>
+        <button type="button" id="duo-confirm" class="primary-btn" data-i18n="duo.setupCta">Code festlegen und weitergeben</button>
+      </div>
+
+      <!-- Duo's handover screen -->
+      <div id="duo-handover" class="panel hidden">
+        <h3 data-i18n="duo.handoverTitle">Jetzt das Gerät weitergeben</h3>
+        <p class="panel-text" data-i18n="duo.handoverText">Der Code ist gesetzt. Gib das Gerät weiter und drücke erst weiter, wenn niemand mehr auf die Farben schauen kann.</p>
+        <button type="button" id="duo-handover-cta" class="primary-btn" data-i18n="duo.handoverCta">Der Code ist verdeckt — ich rate</button>
+      </div>
+
+      <!-- Board -->
+      <div id="game">
+        <div class="board-head">
+          <div class="head-main">
+            <h3 id="round-title">—</h3>
+            <p id="round-sub" class="panel-text"></p>
+          </div>
+          <div class="head-right">
+            <span id="move-count" class="move-count"></span>
+            <div class="streak" id="streak-wrap" hidden>
+              <span class="streak-label" data-i18n="daily.streak">Serie</span>
+              <strong id="streak-value">0</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="legend" id="legend" role="note"></div>
+
+        <ol id="board" class="board" aria-labelledby="board-heading"></ol>
+
+        <div id="result-panel" class="result-panel hidden">
+          <h3 id="result-title"></h3>
+          <p id="result-text" class="panel-text"></p>
+          <div id="result-code" class="result-code"></div>
+          <div class="result-actions">
+            <button type="button" id="result-share" class="primary-btn" data-i18n="share.result">Ergebnis teilen</button>
+            <button type="button" id="result-new" class="ghost-btn" data-i18n="action.newGame">Neues Spiel</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <aside class="col-side">
+      <div class="panel" id="palette-panel">
+        <h3 data-i18n="palette.title">Farben</h3>
+        <div id="palette" class="palette" role="group" aria-label="Farben"></div>
+        <p class="hint" data-i18n="palette.hint">Tastatur: <kbd>1</kbd>–<kbd>6</kbd> setzt, <kbd>←</kbd>/<kbd>→</kbd> wechselt das Feld, <kbd>↑</kbd>/<kbd>↓</kbd> wechselt die Farbe, <kbd>Enter</kbd> bestätigt.</p>
+      </div>
+
+      <div class="panel" id="trainer-panel">
+        <h3 data-i18n="train.title">Trainer</h3>
+        <p class="panel-text" id="trainer-text"></p>
+        <div class="trainer-actions">
+          <button type="button" id="trainer-start" class="ghost-btn wide" data-i18n="train.start">Geführte erste Runde starten</button>
+          <button type="button" id="trainer-hint" class="ghost-btn wide" data-i18n="train.hintBtn">Hinweis geben</button>
+          <button type="button" id="trainer-next" class="primary-btn wide hidden" data-i18n="train.next">Nächsten Zug zeigen</button>
+          <button type="button" id="trainer-back" class="ghost-btn wide hidden" data-i18n="train.back">Zurück zum Spiel</button>
+        </div>
+      </div>
+
+      <div id="settings-panel" class="panel hidden">
+        <h3 data-i18n="settings.title">Einstellungen</h3>
+        <div class="setting">
+          <span class="setting-label" data-i18n="settings.pegs">Länge</span>
+          <div class="segmented" id="set-pegs" role="group"></div>
+        </div>
+        <div class="setting">
+          <span class="setting-label" data-i18n="settings.colors">Farben</span>
+          <div class="segmented" id="set-colors" role="group"></div>
+        </div>
+        <div class="setting">
+          <span class="setting-label" data-i18n="settings.guesses">Versuche</span>
+          <div class="segmented" id="set-guesses" role="group"></div>
+        </div>
+        <button type="button" id="apply-settings" class="ghost-btn wide" data-i18n="settings.apply">Neues Spiel starten</button>
+      </div>
+
+      <div class="panel">
+        <h3 data-i18n="share.title">Teilen</h3>
+        <p class="panel-text" data-i18n="share.text">Kein Konto, kein Tracking. Das Ergebnis steckt als Text in der Zwischenablage, das Rätsel als Link in der Adresse.</p>
+        <div class="share-actions">
+          <button type="button" id="share-result" class="ghost-btn wide" data-i18n="share.result">Ergebnis teilen</button>
+          <button type="button" id="share-puzzle" class="ghost-btn wide" data-i18n="share.puzzle">Rätsel teilen</button>
+        </div>
+        <pre id="share-output" class="share-output" hidden></pre>
+      </div>
+
+      <div class="panel" id="how">
+        <h3 data-i18n="how.title">So wird gespielt</h3>
+        <ol class="how">
+          <li data-i18n="how.1">Der Code ist eine Reihe aus vier bis sechs Feldern. Jede Farbe hat eine eigene Form.</li>
+          <li><span class="fb-inline" data-fb="exact"></span> richtige Farbe an richtiger Stelle, <span class="fb-inline" data-fb="near"></span> richtige Farbe an anderer Stelle, <span class="fb-inline" data-fb="wrong"></span> Farbe kommt nicht vor.</li>
+          <li data-i18n="how.3">Die Form trägt die Information, nicht nur die Farbe — das Spiel funktioniert auch bei Farbfehlsichtigkeit.</li>
+        </ol>
+      </div>
+    </aside>
+  </div>
+
+  <p id="live" class="sr-only" aria-live="polite" role="status"></p>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <p>Farbcode — <span data-i18n="footer.tagline">ein modernes Farb-Rate-Spiel</span>. Kein Konto, keine Cookies, kein Tracking, kein Server.</p>
+    <p class="footer-links">
+      <a href="#how" data-i18n="footer.about">Über das Spiel</a>
+      <span aria-hidden="true">·</span>
+      <a href="https://github.com/stevie86/farbcode" rel="noopener">Quelltext</a>
+    </p>
+  </div>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>
