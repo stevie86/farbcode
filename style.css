@@ -305,6 +305,9 @@ kbd {
 .fb-exact svg { fill: var(--ink); }
 .fb-near svg { fill: var(--ink); color: var(--ink); }
 .fb-wrong svg { fill: none; stroke: var(--muted); stroke-width: 2.6; stroke-linecap: round; }
+/* The wedge bitten out of the "near" disc has to look like a hole, so it
+   takes the colour of the surface it sits on. */
+.fb-bite { fill: var(--card); }
 .fb-inline { display: inline-flex; vertical-align: -2px; }
 .fb-inline .fb { width: 12px; height: 12px; }
 
@@ -314,6 +317,14 @@ kbd {
 #trainer-panel .panel-text { color: var(--ink-2); min-height: 2.6em; }
 .trainer-actions { display: grid; gap: 8px; }
 .trainer-actions .primary-btn { width: 100%; justify-content: center; }
+
+/* The plain "where things stand" block — the deduction, written out. */
+.trainer-log {
+  margin: 0 0 12px; padding: 10px 12px;
+  background: var(--bg); border: 1px solid var(--line); border-radius: 10px;
+  font-family: var(--font-mono); font-size: 0.72rem; line-height: 1.6;
+  color: var(--ink-2); white-space: pre-wrap; word-break: break-word;
+}
 
 /* ---------- settings ---------- */
 

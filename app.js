@@ -79,6 +79,14 @@
       'train.hintMore': 'Noch {n} Kombinationen sind möglich.',
       'train.hintOne': 'Genau eine Kombination ist noch möglich.',
       'train.hintSolution': 'Die einzige mögliche Kombination: {code}.',
+      'train.logTitle': 'Lage',
+      'train.logNone': 'Noch keine Züge — der Trainer kann noch nichts schließen.',
+      'train.logGuesses': '{n} Züge · {c} Kombinationen möglich',
+      'train.logFixed': 'Festgelegt: {list}',
+      'train.logCandidates': 'Möglich: {list}',
+      'train.logMore': 'Noch {c} Kombinationen möglich.',
+      'train.diagnose': 'Diagnose kopieren',
+      'train.diagnoseCopied': 'Diagnose kopiert — bitte im Chat einfügen.',
       'footer.tagline': 'ein modernes Farb-Rate-Spiel', 'footer.about': 'Über das Spiel',
       'status.guess': 'Zug {n} von {max}',
       'status.exact1': '{n} richtige Farbe an richtiger Stelle',
@@ -155,6 +163,14 @@
       'train.hintMore': '{n} combinations are still possible.',
       'train.hintOne': 'Exactly one combination is still possible.',
       'train.hintSolution': 'The only possible combination: {code}.',
+      'train.logTitle': 'Where things stand',
+      'train.logNone': 'No moves yet — the coach cannot deduce anything.',
+      'train.logGuesses': '{n} moves · {c} combinations possible',
+      'train.logFixed': 'Settled: {list}',
+      'train.logCandidates': 'Possible: {list}',
+      'train.logMore': '{c} combinations still possible.',
+      'train.diagnose': 'Copy diagnosis',
+      'train.diagnoseCopied': 'Diagnosis copied — please paste it in the chat.',
       'footer.tagline': 'a modern take on the colour guessing game', 'footer.about': 'About the game',
       'status.guess': 'Move {n} of {max}',
       'status.exact1': '{n} right colour, right place',
@@ -203,6 +219,7 @@
     hintFor: -1,
     hintSeen: [],
     hintText: '',
+    analysis: null,
   };
 
   // -------------------------------------------------------------- helpers ---
@@ -488,6 +505,19 @@
     return { cands, facts };
   }
 
+  /* The position of a fact is worth more than its wording, so the analysis is
+     cached: the candidate space is enumerated once per move, not per render. */
+  function currentAnalysis() {
+    const key = `${state.settings.pegs}x${state.settings.colors}:` +
+      state.guesses.map((g) => g.guess.join('')).join('|');
+    if (state.analysis && state.analysis.key === key) return state.analysis.value;
+    const value = analyze();
+    state.analysis = { key, value };
+    return value;
+  }
+
+  function codeText(code) { return code.map(colorName).join(' '); }
+
   function buildHints() {
     if (!state.guesses.length) return [t('train.hintFirst')];
     const { cands, facts } = analyze();
@@ -524,15 +554,77 @@
     state.hintText = hints[idx];
     state.hintSeen.push(hints[idx]);
     state.hintIndex = idx + 1;
+    // A log line makes a wrong hint traceable instead of a matter of trust.
+    console.info('[farbcode] hint', {
+      moves: state.guesses.length,
+      candidates: currentAnalysis().cands.length,
+      hint: state.hintText,
+    });
     announce(state.hintText);
     renderTrainer();
+    renderTrainerLog();
     syncModeTabs();
+  }
+
+  /* The diagnosis is the whole state: moves, feedback, candidate space and
+     the facts drawn from it. Copying it is the shortest way to a bug report. */
+  function diagnosis() {
+    const { cands, facts } = currentAnalysis();
+    return {
+      spiel: 'Farbcode',
+      stand: '2026-10-26',
+      modus: state.mode,
+      datum: state.date,
+      einstellungen: state.settings,
+      zuege: state.guesses.map((g) => ({ rat: g.guess, richtig: g.exact, anderswo: g.near })),
+      kandidaten: cands.map(codeText),
+      kandidatenAnzahl: cands.length,
+      feststellungen: facts.map((f) => (f.type === 'pos' ? `Feld ${f.p + 1} = ${colorName(f.color)}`
+        : f.type === 'count' ? `${colorName(f.color)} genau ${f.k}-mal`
+        : f.type === 'absent' ? `${colorName(f.color)} kommt nicht vor`
+        : f.type === 'present' ? `${colorName(f.color)} kommt vor`
+        : `${colorName(f.color)} ist noch möglich`)),
+    };
+  }
+
+  async function copyDiagnosis() {
+    const text = JSON.stringify(diagnosis(), null, 2);
+    const ok = await copyToClipboard(text);
+    announce(ok ? t('train.diagnoseCopied') : t('share.failed'));
+    console.info('[farbcode] diagnose', text);
+  }
+
+  /* The plain "where things stand" block: what is settled, and which
+     combinations are still possible. The numbers are the deduction, not a
+     vague feeling about it. */
+  function renderTrainerLog() {
+    const box = $('#trainer-log');
+    if (!box) return;
+    if (state.mode === 'train' || !state.guesses.length) {
+      box.hidden = true;
+      box.textContent = '';
+      return;
+    }
+    const { cands, facts } = currentAnalysis();
+    const lines = [];
+    lines.push(t('train.logGuesses', { n: state.guesses.length, c: cands.length }));
+    const fixed = facts.filter((f) => f.type === 'pos')
+      .map((f) => t('train.hintPos', { n: f.p + 1, color: colorName(f.color) }));
+    if (fixed.length) lines.push(t('train.logFixed', { list: fixed.join(' · ') }));
+    if (cands.length && cands.length <= 6) {
+      lines.push(t('train.logCandidates', { list: cands.map(codeText).join('  |  ') }));
+    } else if (cands.length) {
+      lines.push(t('train.logMore', { c: cands.length }));
+    }
+    box.hidden = false;
+    box.textContent = lines.join('\n');
   }
 
   function renderTrainer() {
     const train = state.mode === 'train';
     $('#trainer-start').classList.toggle('hidden', train);
     $('#trainer-hint').classList.toggle('hidden', train);
+    $('#trainer-diagnose').classList.toggle('hidden', train);
     $('#trainer-next').classList.toggle('hidden', !train || state.over);
     $('#trainer-back').classList.toggle('hidden', !train);
     const text = $('#trainer-text');
@@ -554,7 +646,9 @@
 
   function fbSvg(kind) {
     if (kind === 'exact') return `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="8.8"/></svg>`;
-    if (kind === 'near') return `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 3.2 A8.8 8.8 0 0 0 12 20.8 Z"/><circle cx="12" cy="12" r="8.8" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>`;
+    // A solid disc with a wedge bitten out. A half circle reads as "empty" at
+    // this size — and "empty" was exactly what a player took it for.
+    if (kind === 'near') return `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="8.8"/><path class="fb-bite" d="M12 12 L12 3.2 A8.8 8.8 0 0 1 19.62 7.6 Z"/></svg>`;
     // A cross, not an empty circle: "nothing here" was impossible to read.
     return `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7.5 7.5 L16.5 16.5 M16.5 7.5 L7.5 16.5"/></svg>`;
   }
@@ -892,7 +986,9 @@
       ? `Farbcode ${state.date}`
       : `Farbcode ${state.mode === 'duo' ? 'two players' : 'free play'}`;
     const rows = state.guesses.map((g) => {
-      const marks = '●'.repeat(g.exact) + '◐'.repeat(g.near) + '○'.repeat(g.guess.length - g.exact - g.near);
+      // The share text uses the same markers as the board — an empty circle
+      // here would contradict the legend.
+      const marks = '●'.repeat(g.exact) + '◐'.repeat(g.near) + '✗'.repeat(g.guess.length - g.exact - g.near);
       return marks;
     });
     const tail = state.won ? `${state.guesses.length}/${state.settings.guesses}` : `X/${state.settings.guesses}`;
@@ -1066,6 +1162,7 @@
     $('#trainer-next').addEventListener('click', trainNext);
     $('#trainer-back').addEventListener('click', exitTraining);
     $('#trainer-hint').addEventListener('click', showNextHint);
+    $('#trainer-diagnose').addEventListener('click', copyDiagnosis);
 
     $('#apply-settings').addEventListener('click', () => {
       const pegs = Number($('#set-pegs [aria-pressed="true"]').dataset.value);
