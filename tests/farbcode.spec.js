@@ -114,6 +114,18 @@ async function main() {
     assert.ok(same, 'gleiches Datum ergab zwei verschiedene Codes');
   });
 
+  await check('Tagescode ist festgenagelt (Seed-Version v2)', async () => {
+    await reset();
+    // Regression: eine Änderung am Generator darf ein veröffentlichtes
+    // Rätsel nicht still verschieben — dafür gibt es die Seed-Version.
+    const codes = await page.evaluate(() => ({
+      a: window.farbcode.dailyCode('2026-10-27', 4, 6),
+      b: window.farbcode.dailyCode('2026-10-28', 4, 6),
+    }));
+    assert.strictEqual(codes.a.join(), '4,2,3,5', `27.10. war ${codes.a.join()}`);
+    assert.strictEqual(codes.b.join(), '1,2,0,5', `28.10. war ${codes.b.join()}`);
+  });
+
   await check('Pfeil runter von der ersten Farbe springt auf die letzte (kein No-op)', async () => {
     await reset();
     await page.keyboard.press('1');            // Feld 0 = Rot, Cursor wandert auf Feld 1

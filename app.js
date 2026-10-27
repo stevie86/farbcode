@@ -328,8 +328,12 @@
     return code;
   }
 
+  /* The seed carries a version: a change to the generator must not silently
+     move a puzzle that was already published. v2 = distinct colours. */
+  const DAILY_SEED_VERSION = 'v2';
+
   function dailyCode(dateStr, pegs, colorCount) {
-    const rnd = mulberry32(fnv1a('farbcode:' + dateStr));
+    const rnd = mulberry32(fnv1a(`farbcode:${DAILY_SEED_VERSION}:${dateStr}`));
     return drawDistinct(pegs, colorCount, rnd);
   }
 
