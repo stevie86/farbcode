@@ -40,7 +40,7 @@
       'duo.handoverCta': 'Der Code ist verdeckt — ich rate',
       'duo.guessTitle': 'Du bist am Zug', 'duo.guessSub': 'Der Code bleibt verdeckt, bis das Spiel endet.',
       'action.submit': 'Raten', 'action.newGame': 'Neues Spiel',
-      'palette.title': 'Farben', 'palette.hint': 'Tastatur: 1–6 setzt eine Farbe, ←/→ wechselt das Feld, ↑/↓ wechselt die Farbe im Feld, Enter bestätigt, Backspace leert.',
+      'palette.title': 'Farben', 'palette.hint': 'Tastatur: 1–6 setzt eine Farbe, ←/→ wechselt das Feld, ↑/↓ wechselt die Farbe im Feld, Enter bestätigt, Backspace leert.', 'palette.used': 'bereits vergeben',
       'settings.title': 'Einstellungen', 'settings.pegs': 'Länge', 'settings.colors': 'Farben',
       'settings.guesses': 'Versuche', 'settings.apply': 'Neues Spiel starten',
       'share.title': 'Teilen',
@@ -53,7 +53,10 @@
       'legend.wrong': 'Farbe kommt nicht vor',
       'how.title': 'So wird gespielt',
       'how.1': 'Der Code ist eine Reihe aus vier bis sechs Feldern. Jede Farbe hat eine eigene Form.',
-      'how.2': 'Nach jedem Zug siehst du die Rückmeldung: eine richtige Farbe an richtiger Stelle, eine richtige Farbe an anderer Stelle, eine Farbe, die nicht vorkommt.',
+      'how.2': 'Jede Farbe kommt höchstens einmal vor — im Code und in jedem Tipp. Die Oberfläche lässt keine Doppelungen zu.',
+      'how.2.exact': 'richtige Farbe an richtiger Stelle',
+      'how.2.near': 'richtige Farbe an anderer Stelle',
+      'how.2.wrong': 'Farbe kommt nicht vor',
       'how.3': 'Die Form trägt die Information, nicht nur die Farbe — das Spiel funktioniert auch bei Farbfehlsichtigkeit.',
       'train.title': 'Trainer',
       'train.intro': 'Drei Züge, die dir die Symbole erklären — danach spielst du allein weiter.',
@@ -62,8 +65,8 @@
       'train.back': 'Zurück zum Spiel',
       'train.step': 'Trainingszug {n} von {max}',
       'train.done': 'Training geschafft — du kennst jetzt ●, ◐ und ✗.',
-      'train.s1.goal': 'Zug 1: viermal dieselbe Farbe. Damit siehst du, wie „richtige Stelle“ und „kommt nicht vor“ zusammenspielen.',
-      'train.s1.read': '● passt an Feld 1. Die drei ✗ heißen: Es gibt nur ein einziges Rot im Code — die Kreuze sind keine zusätzlichen roten Perlen.',
+      'train.s1.goal': 'Zug 1: ein Zug, den das Spiel gar nicht erst zulässt — viermal dieselbe Farbe. Genau deshalb sperrt die Oberfläche Doppelungen.',
+      'train.s1.read': '● passt an Feld 1. Die drei ✗ heißen: Rot gibt es nur einmal — die Kreuze sind keine zusätzlichen roten Perlen. Deshalb darf jede Farbe im Code und im Tipp nur einmal vorkommen.',
       'train.s2.goal': 'Zug 2: eine Farbe richtig platziert, eine richtig, aber an anderer Stelle. Jetzt kommt ◐ ins Spiel.',
       'train.s2.read': '● steht an Feld 2. ◐ heißt: dieselbe Farbe, andere Stelle — Rot sitzt an Feld 1, nicht an Feld 3. Die Kreuze: Blau gibt es nur einmal, und Feld 3 ist kein Rot.',
       'train.s3.goal': 'Zug 3: der vollständige Code.',
@@ -101,6 +104,9 @@
       'announce.win': 'Gelöst in {n} Zügen.',
       'announce.lose': 'Verloren. Die Kombi war {code}.',
       'announce.incomplete': 'Bitte zuerst alle Felder füllen.',
+      'announce.colorUsed': 'Die Farbe {color} ist schon vergeben — jede Farbe darf nur einmal vorkommen.',
+      'announce.duplicate': 'Zwei Felder tragen dieselbe Farbe. Bitte zuerst ändern.',
+      'announce.noFreeColor': 'Keine Farbe mehr frei — jedes Feld braucht eine eigene Farbe.',
       'announce.handover': 'Der Code ist gesetzt. Gib das Gerät weiter.',
       'slot.empty': 'Feld {n}: leer',
       'slot.filled': 'Feld {n}: {color}, {shape}',
@@ -124,7 +130,7 @@
       'duo.handoverCta': 'The code is hidden — I am guessing',
       'duo.guessTitle': 'Your turn', 'duo.guessSub': 'The code stays hidden until the game ends.',
       'action.submit': 'Guess', 'action.newGame': 'New game',
-      'palette.title': 'Colours', 'palette.hint': 'Keyboard: 1–6 sets a colour, ←/→ moves the slot, ↑/↓ cycles the colour, Enter confirms, Backspace clears.',
+      'palette.title': 'Colours', 'palette.hint': 'Keyboard: 1–6 sets a colour, ←/→ moves the slot, ↑/↓ cycles the colour, Enter confirms, Backspace clears.', 'palette.used': 'already used',
       'settings.title': 'Settings', 'settings.pegs': 'Length', 'settings.colors': 'Colours',
       'settings.guesses': 'Guesses', 'settings.apply': 'Start a new game',
       'share.title': 'Share',
@@ -137,7 +143,10 @@
       'legend.wrong': 'colour does not occur',
       'how.title': 'How it works',
       'how.1': 'The code is a row of four to six slots. Every colour carries its own shape.',
-      'how.2': 'After each guess you get feedback: right colour in the right place, right colour in the wrong place, colour that does not occur.',
+      'how.2': 'Every colour appears at most once — in the code and in every guess. The interface does not allow duplicates.',
+      'how.2.exact': 'right colour in the right place',
+      'how.2.near': 'right colour in the wrong place',
+      'how.2.wrong': 'colour does not occur',
       'how.3': 'Shape carries the information, not colour alone — the game works with colour vision deficiency.',
       'train.title': 'Coach',
       'train.intro': 'Three moves that explain the markers — after that you play on your own.',
@@ -146,8 +155,8 @@
       'train.back': 'Back to the game',
       'train.step': 'Training move {n} of {max}',
       'train.done': 'Training done — you know ●, ◐ and ✗ now.',
-      'train.s1.goal': 'Move 1: the same colour four times. This shows how “right place” and “does not occur” fit together.',
-      'train.s1.read': '● matches slot 1. The three ✗ mean: there is only one red in the code — the crosses are not extra red pegs.',
+      'train.s1.goal': 'Move 1: a move the game does not even allow — the same colour four times. That is exactly why the interface blocks duplicates.',
+      'train.s1.read': '● matches slot 1. The three ✗ mean: there is only one red — the crosses are not extra red pegs. That is why every colour may only appear once in the code and in a guess.',
       'train.s2.goal': 'Move 2: one colour in the right place, one right colour in the wrong place. Now ◐ comes into play.',
       'train.s2.read': '● sits in slot 2. ◐ means: same colour, other place — red is in slot 1, not slot 3. The crosses: there is only one blue, and slot 3 is not red.',
       'train.s3.goal': 'Move 3: the complete code.',
@@ -185,6 +194,9 @@
       'announce.win': 'Solved in {n} moves.',
       'announce.lose': 'Out of moves. The combination was {code}.',
       'announce.incomplete': 'Fill every slot first.',
+      'announce.colorUsed': 'The colour {color} is already used — every colour may only appear once.',
+      'announce.duplicate': 'Two slots carry the same colour. Please change one first.',
+      'announce.noFreeColor': 'No colour left — every slot needs its own colour.',
       'announce.handover': 'The code is set. Hand the device over.',
       'slot.empty': 'Slot {n}: empty',
       'slot.filled': 'Slot {n}: {color}, {shape}',
@@ -212,6 +224,10 @@
     won: false,
     settings: { pegs: 4, colors: 6, guesses: 12 },
     date: todayISO(),
+    // House rule: every colour appears at most once — in the code as well as
+    // in a guess. 'repeat' only survives in games that were saved before the
+    // rule existed; those keep their old scoring so nothing is rewritten.
+    rules: 'distinct',
     // Trainer: a scripted round that explains the markers, plus a logic hint
     // that is derived from the moves the player has already made.
     train: { step: 0, returnTo: null },
@@ -294,17 +310,31 @@
     return { exact, near };
   }
 
-  function dailyCode(dateStr, pegs, colorCount) {
-    const rnd = mulberry32(fnv1a('farbcode:' + dateStr));
+  /* House rule: every colour appears at most once — in the code as well as in
+     a guess. The classic rules leave that to the players ("players decide in
+     advance whether duplicates are allowed"), but as long as a colour can
+     repeat, the cross "colour does not occur" is not true: a second peg of the
+     same colour gets no key peg only because the colour is already counted.
+     With distinct colours everywhere, the cross always means "not in the
+     code" — that is what makes the whole feedback language honest. */
+  function drawDistinct(pegs, colorCount, rnd) {
+    const pool = [];
+    for (let i = 0; i < colorCount; i++) pool.push(i);
     const code = [];
-    for (let i = 0; i < pegs; i++) code.push(Math.floor(rnd() * colorCount));
+    for (let i = 0; i < pegs && pool.length; i++) {
+      const j = Math.floor(rnd() * pool.length);
+      code.push(pool.splice(j, 1)[0]);
+    }
     return code;
   }
 
+  function dailyCode(dateStr, pegs, colorCount) {
+    const rnd = mulberry32(fnv1a('farbcode:' + dateStr));
+    return drawDistinct(pegs, colorCount, rnd);
+  }
+
   function randomCode(pegs, colorCount) {
-    const code = [];
-    for (let i = 0; i < pegs; i++) code.push(Math.floor(Math.random() * colorCount));
-    return code;
+    return drawDistinct(pegs, colorCount, Math.random);
   }
 
   function newGame(mode, opts = {}) {
@@ -314,6 +344,7 @@
     state.won = false;
     state.guesses = [];
     state.date = todayISO();
+    state.rules = 'distinct';
 
     if (mode === 'daily') {
       state.settings = { pegs: 4, colors: 6, guesses: 12 };
@@ -393,6 +424,7 @@
     state.won = false;
     state.settings = { pegs: TRAIN_CODE.length, colors: 6, guesses: 12 };
     state.date = todayISO();
+    state.rules = 'distinct';
     state.hintIndex = 0;
     state.hintText = '';
     saveTrain();
@@ -466,15 +498,33 @@
   function candidateCodes() {
     const { pegs, colors } = state.settings;
     const out = [];
-    const total = Math.pow(colors, pegs);
-    for (let n = 0; n < total; n++) {
-      const cand = codeFromNumber(n, pegs, colors);
-      let fits = true;
-      for (const g of state.guesses) {
-        const s = scoreFast(g.guess, cand);
-        if (s.exact !== g.exact || s.near !== g.near) { fits = false; break; }
+    if (state.rules === 'distinct') {
+      // With every colour used at most once, the candidates are the
+      // permutations — 360 instead of 1296 for four slots and six colours.
+      // Fewer candidates, and therefore sharper deductions.
+      const used = new Array(colors).fill(false);
+      const cur = [];
+      const walk = (depth) => {
+        if (depth === pegs) { out.push(cur.slice()); return; }
+        for (let c = 0; c < colors; c++) {
+          if (used[c]) continue;
+          used[c] = true; cur.push(c);
+          walk(depth + 1);
+          cur.pop(); used[c] = false;
+        }
+      };
+      walk(0);
+    } else {
+      const total = Math.pow(colors, pegs);
+      for (let n = 0; n < total; n++) {
+        const cand = codeFromNumber(n, pegs, colors);
+        let fits = true;
+        for (const g of state.guesses) {
+          const s = scoreFast(g.guess, cand);
+          if (s.exact !== g.exact || s.near !== g.near) { fits = false; break; }
+        }
+        if (fits) out.push(cand);
       }
-      if (fits) out.push(cand);
     }
     return out;
   }
@@ -746,10 +796,20 @@
     const n = state.settings.colors;
     const btns = [];
     for (let i = 0; i < n; i++) {
-      const label = `${colorName(i)}, ${shapeName(i)}, Taste ${i + 1}`;
-      btns.push(`<button type="button" class="palette-btn" data-color="${i}" aria-label="${escapeAttr(label)}"><span class="peg">${pegSvg(i)}</span></button>`);
+      const used = colorUsedElsewhere(state.slot, i);
+      const label = `${colorName(i)}, ${shapeName(i)}, Taste ${i + 1}` + (used ? ` · ${t('palette.used')}` : '');
+      btns.push(`<button type="button" class="palette-btn${used ? ' is-used' : ''}" data-color="${i}" aria-label="${escapeAttr(label)}"${used ? ' aria-disabled="true"' : ''}><span class="peg">${pegSvg(i)}</span></button>`);
     }
     wrap.innerHTML = btns.join('');
+  }
+
+  /* A short shake on the swatch the player just tried to use twice. */
+  function markBlocked(colorIndex) {
+    const btn = $(`#palette [data-color="${colorIndex}"]`);
+    if (!btn) return;
+    btn.classList.remove('is-blocked');
+    void btn.offsetWidth;
+    btn.classList.add('is-blocked');
   }
 
   function renderSettings() {
@@ -758,7 +818,10 @@
       el.innerHTML = options.map((o) =>
         `<button type="button" data-value="${o}" aria-pressed="${o === current}">${o}</button>`).join('');
     };
-    set('#set-pegs', [4, 5, 6], state.settings.pegs);
+    // With every colour used at most once, there cannot be more slots than
+    // colours — a six-slot board would need six colours.
+    const pegOptions = [4, 5, 6].filter((p) => p <= state.settings.colors);
+    set('#set-pegs', pegOptions, state.settings.pegs);
     set('#set-colors', [5, 6], state.settings.colors);
     set('#set-guesses', [8, 10, 12, 15], state.settings.guesses);
   }
@@ -886,15 +949,48 @@
 
   function announce(text) { $('#live').textContent = text; }
 
+  /* A colour may only be used once. The slot being edited is exempt — it is
+     the slot that owns that colour. */
+  function colorUsedElsewhere(slotIndex, colorIndex) {
+    if (state.rules !== 'distinct') return false;
+    for (let i = 0; i < state.current.length; i++) {
+      if (i !== slotIndex && state.current[i] === colorIndex) return true;
+    }
+    return false;
+  }
+
+  /* The next free colour in the given direction. The old modulo had an
+     off-by-one that made ↓ a no-op on the first and on the last colour, and
+     ↑ jumped over one. */
+  function nextFreeColor(slotIndex, dir) {
+    const n = state.settings.colors;
+    const cur = state.current[slotIndex];
+    let idx = cur === null ? (dir === 1 ? -1 : n) : cur;
+    for (let step = 0; step < n; step++) {
+      idx = (idx + dir + n) % n;
+      if (!colorUsedElsewhere(slotIndex, idx)) return idx;
+    }
+    return null;
+  }
+
   function setColor(slotIndex, colorIndex, advance = true) {
-    if (state.over) return;
-    if (colorIndex < 0 || colorIndex >= state.settings.colors) return;
+    if (state.over) return false;
+    if (colorIndex < 0 || colorIndex >= state.settings.colors) return false;
+    if (colorUsedElsewhere(slotIndex, colorIndex)) {
+      // The interface refuses the duplicate instead of silently accepting it:
+      // a second peg of the same colour can never be right and only wastes a
+      // move, and the cross "colour does not occur" would no longer be true.
+      announce(t('announce.colorUsed', { color: colorName(colorIndex) }));
+      markBlocked(colorIndex);
+      return false;
+    }
     state.current[slotIndex] = colorIndex;
     // Choosing a colour moves on to the next slot; cycling with the arrow
     // keys must not, or the cursor would run away from the field being edited.
     if (advance) state.slot = Math.min(slotIndex + 1, state.settings.pegs - 1);
     render();
     saveGame();
+    return true;
   }
 
   function clearSlot(slotIndex) {
@@ -908,6 +1004,11 @@
   function submitGuess() {
     if (state.over) return;
     if (state.current.some((c) => c === null)) { announce(t('announce.incomplete')); return; }
+    if (state.rules === 'distinct' && new Set(state.current).size !== state.current.length) {
+      // Safety net for games that were saved before the rule existed.
+      announce(t('announce.duplicate'));
+      return;
+    }
     const guess = state.current.slice();
     const { exact, near } = score(guess, state.code);
     state.guesses.push({ guess, exact, near });
@@ -970,7 +1071,7 @@
     saveJson(STORE.game, {
       mode: state.mode, phase: state.phase, code: state.code, guesses: state.guesses,
       current: state.current, slot: state.slot, over: state.over, won: state.won,
-      settings: state.settings, date: state.date, ts: Date.now(),
+      settings: state.settings, date: state.date, rules: state.rules, ts: Date.now(),
     });
   }
 
@@ -1059,6 +1160,9 @@
       state.phase = 'guess';
       state.over = state.guesses.length >= state.settings.guesses;
       state.won = state.over && state.guesses.some((g) => g.exact === state.settings.pegs);
+      // A shared puzzle that was made before the house rule may contain a
+      // duplicate — it keeps the old scoring so the cross stays truthful.
+      state.rules = new Set(state.code).size === state.code.length ? 'distinct' : 'repeat';
       return true;
     } catch {
       return false;
@@ -1168,7 +1272,7 @@
       const pegs = Number($('#set-pegs [aria-pressed="true"]').dataset.value);
       const colors = Number($('#set-colors [aria-pressed="true"]').dataset.value);
       const guesses = Number($('#set-guesses [aria-pressed="true"]').dataset.value);
-      state.settings = { pegs, colors, guesses };
+      state.settings = { pegs: Math.min(pegs, colors), colors, guesses };
       saveSettings();
       newGame('solo');
     });
@@ -1178,6 +1282,7 @@
         const btn = e.target.closest('[data-value]');
         if (!btn) return;
         state.settings[key] = Number(btn.dataset.value);
+        if (state.settings.pegs > state.settings.colors) state.settings.pegs = state.settings.colors;
         renderSettings();
       });
     });
@@ -1218,9 +1323,9 @@
 
     if (key === 'ArrowUp' || key === 'ArrowDown') {
       e.preventDefault();
-      const cur = state.current[state.slot];
-      const base = cur === null ? -1 : cur;
-      const next = (base + (key === 'ArrowUp' ? 1 : -1) + state.settings.colors + 1) % state.settings.colors;
+      const dir = key === 'ArrowUp' ? 1 : -1;
+      const next = nextFreeColor(state.slot, dir);
+      if (next === null) { announce(t('announce.noFreeColor')); return; }
       setColor(state.slot, next, false);
       focusSlot(state.slot);
       return;
@@ -1295,6 +1400,10 @@
         state.over = !!saved.over;
         state.won = !!saved.won;
         state.date = saved.date || today;
+        // Games saved before the house rule existed keep their old scoring —
+        // their code may contain a duplicate, and the candidate list has to
+        // stay consistent with it.
+        state.rules = saved.rules === 'repeat' ? 'repeat' : (saved.rules ? 'distinct' : 'repeat');
       } else {
         state.date = todayISO();
         state.mode = 'daily';

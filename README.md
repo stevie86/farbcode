@@ -31,11 +31,34 @@ Keine Cookies, kein Tracking, kein Konto, kein Backend. Der Spielstand liegt im
 |---|---|
 | ● | Richtige Farbe an richtiger Stelle |
 | ◐ | Richtige Farbe an anderer Stelle |
-| ✗ | Diese Farbe kommt nicht vor (bzw. es gibt keine zweite Perle davon) |
+| ✗ | Diese Farbe kommt nicht vor |
 
 Die Legende steht **immer** sichtbar über dem Brett, und die Rückmeldung wird
 zusätzlich in Klartext beschrieben („2 richtige Farben an anderer Stelle, 1 Farbe
 kommt nicht vor"). Kein Zählen von Punkten im Kopf, keine Interpretationsarbeit.
+
+## Die Hausregel: jede Farbe höchstens einmal
+
+**Im Code und in jedem Tipp kommt jede Farbe höchstens einmal vor.** Die Oberfläche
+lässt keine Doppelungen zu: eine bereits vergebene Farbe ist in der Palette
+ausgegraut, ein Klick darauf wird abgelehnt und erklärt, und die Pfeiltasten
+überspringen belegte Farben.
+
+Das ist keine Geschmacksfrage, sondern die Bedingung dafür, dass die Sprache der
+Rückmeldung stimmt. Im klassischen Mastermind ist es eine Hausregel („players decide
+in advance whether duplicates are allowed"), und solange eine Farbe doppelt vorkommen
+kann, heißt ein Kreuz nicht „kommt nicht vor", sondern nur „kein zweiter Stein
+dieser Farbe" — der Code könnte sie trotzdem an anderer Stelle enthalten. Mit
+eindeutigen Farben ist das Kreuz endlich schlicht und richtig: **die Farbe ist nicht
+im Code**.
+
+Nebeneffekt: der Hinweis rechnet nur noch Permutationen (360 statt 1296 Kandidaten
+bei vier Feldern und sechs Farben) und schließt damit schneller und genauer.
+
+> **Hinweis für Bestandsspiele:** Partien, die vor dieser Regel gespeichert wurden,
+> behalten ihre alte Wertung (`rules: 'repeat'`). Ihr Code kann eine Doppelung
+> enthalten, ihre Hinweise bleiben deshalb konsistent. Neue Partien nutzen
+> `rules: 'distinct'`.
 
 ## Spielen
 
@@ -64,11 +87,27 @@ python -m http.server 8123
 index.html   Struktur
 style.css    Gestaltung (helles und dunkles Farbschema)
 app.js       Regelwerk, Oberfläche, Trainer — ohne Framework
+tests/       Playwright-Suite (Regeln, Tastatur, Trainer, Altbestände)
 ```
 
-Drei Dateien, kein Build-Schritt. Das komplette Regelwerk steckt in `app.js`; für
-Tests und Neugierige ist es zusätzlich unter `window.farbcode` erreichbar
-(`score`, `candidateCodes`, `analyze`, …).
+Drei Dateien fürs Spiel, kein Build-Schritt. Das komplette Regelwerk steckt in
+`app.js`; für Tests und Neugierige ist es zusätzlich unter `window.farbcode`
+erreichbar (`score`, `candidateCodes`, `analyze`, …).
+
+## Tests
+
+Die Suite prüft die Regeln gegen das, was der Code tatsächlich tut — Hausregel,
+Pfeiltasten, Trainer, Altbestände. Sie startet einen eigenen kleinen Server und
+braucht deshalb keine offenen Ports:
+
+```bash
+npm install                 # nur Playwright als Entwicklungsabhängigkeit
+npx playwright install chromium
+npm test
+```
+
+Das Spiel selbst bleibt frei von Abhängigkeiten: `package.json` existiert nur für
+den Testlauf, es gibt weiterhin keinen Build-Schritt.
 
 ## Datenschutz
 
