@@ -114,6 +114,25 @@
         <p class="hint" data-i18n="palette.hint">Tastatur: <kbd>1</kbd>–<kbd>6</kbd> setzt, <kbd>←</kbd>/<kbd>→</kbd> wechselt das Feld, <kbd>↑</kbd>/<kbd>↓</kbd> wechselt die Farbe, <kbd>Enter</kbd> bestätigt.</p>
       </div>
 
+      <div class="panel" id="progress-panel">
+        <h3 data-i18n="progress.title">Fortschritt</h3>
+        <p class="panel-text" id="progress-count"></p>
+        <div class="progress-track" role="img" aria-hidden="true">
+          <span id="progress-fill"></span>
+        </div>
+        <p class="progress-pct"><span id="progress-pct">0%</span></p>
+        <p class="progress-best" id="progress-best" hidden></p>
+        <div class="cand-walk" id="cand-walk" hidden>
+          <p class="cand-label" id="cand-label"></p>
+          <div class="cand-pegs" id="cand-pegs"></div>
+          <p class="cand-note" id="cand-note"></p>
+          <div class="cand-actions">
+            <button type="button" id="cand-prev" class="ghost-btn" data-i18n="progress.prev">Zurück</button>
+            <button type="button" id="cand-next" class="ghost-btn" data-i18n="progress.next">Weiter</button>
+          </div>
+        </div>
+      </div>
+
       <div class="panel" id="trainer-panel">
         <h3 data-i18n="train.title">Trainer</h3>
         <p class="panel-text" id="trainer-text"></p>
@@ -171,12 +190,13 @@
 
 <footer class="site-footer">
   <div class="wrap">
-    <p>Farbcode — <span data-i18n="footer.tagline">ein modernes Farb-Rate-Spiel</span>. Kein Konto, keine Cookies, kein Tracking, kein Server.</p>
+    <p>Farbcode — <span data-i18n="footer.tagline">ein modernes Farb-Rate-Spiel</span>. <span data-i18n="footer.privacy">Kein Konto, keine Cookies, kein Tracking, kein Server.</span></p>
     <p class="footer-links">
       <a href="#how" data-i18n="footer.about">Über das Spiel</a>
       <span aria-hidden="true">·</span>
       <a href="https://github.com/stevie86/farbcode" rel="noopener">Quelltext</a>
     </p>
+    <p class="footer-meta" id="footer-meta"></p>
   </div>
 </footer>
 

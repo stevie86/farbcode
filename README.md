@@ -17,6 +17,7 @@ lesbar, auch wenn sie niemand sieht.
 | **Tagesrätsel** | Alle raten am selben Tag dieselbe Kombi. Deterministisch aus dem Datum erzeugt — kein Server nötig, jeder bekommt dasselbe Rätsel. |
 | **Freies Spiel** | Eigene Länge (4–6 Felder), Farbzahl (5–6) und Zuglimit (8–15). |
 | **Zu zweit** | Der erste Spieler legt den Code fest und gibt das Gerät weiter; der Code bleibt verdeckt, bis das Spiel endet. |
+| **Fortschritt** | Ein Panel zeigt, wie viele der möglichen Kombinationen noch passen, welcher Zug am besten teilt und wie viele im schlimmsten Fall bleiben. Die Kandidaten lassen sich einzeln durchblättern. |
 | **Trainer** | Eine geführte erste Runde erklärt die Symbole an einem festen Beispiel — und ein Logik-Hinweis schließt aus deinen Zügen, was sicher stimmt. |
 | **Teilen** | Ergebnis als spoilerfreier Text, Rätsel als Link in der Adresse (`#g=…`). |
 | **Sprachen** | Deutsch und Englisch, umschaltbar. |
@@ -60,6 +61,48 @@ bei vier Feldern und sechs Farben) und schließt damit schneller und genauer.
 > enthalten, ihre Hinweise bleiben deshalb konsistent. Neue Partien nutzen
 > `rules: 'distinct'`.
 
+## Die Fortschrittsanzeige
+
+Das Panel „Fortschritt" beantwortet drei Fragen, die ein Farb-Rate-Spiel sonst
+offen lässt:
+
+1. **Wie viele Kombinationen passen noch?** Aus den 360 Permutationen (vier
+   Felder, sechs Farben) wird nach jedem Zug die Menge derer, die dein
+   Feedback erklären. Der Balken zeigt, wie viel davon schon weg ist.
+2. **Welcher Zug teilt am besten?** Das ist der Minimax-Zug: für jeden möglichen
+   Tipp wird gezählt, wie viele Kandidaten das schlechteste Feedback überleben
+   lassen — der Tipp mit der kleinsten schlimmsten Fallzahl gewinnt. Das ist
+   dasselbe Prinzip, nach dem ein Mastermind-Löser spielt, und es braucht
+   keine externe Tabelle.
+3. **Was ist noch möglich?** Die Kandidaten lassen sich mit „Weiter" und
+   „Zurück" **einzeln** durchgehen — nicht alle auf einmal, das wäre unlesbar.
+   Der beste Zug ist dabei markiert.
+
+Der Trainer-Hinweis nennt denselben Zug in Textform, und der Trainer-Log zeigt,
+welche Kombinationen noch offen sind.
+
+Der Fortschritt ist bewusst **informationell**, nicht punktbasiert: es gibt
+keine Serie, keine Elo, keine Bestzeit. Das Panel sagt nicht „du bist gut
+dran", sondern „von 360 bleiben noch 84, und der Zug X teilt am besten".
+
+## Die Versionszeile
+
+Ganz unten im Footer steht, welches Spiel man gerade spielt:
+
+```
+Version 1.2.0 · Tagescode-Version v2 · Hausregel: jede Farbe höchstens einmal
+```
+
+Das ist keine Dekoration, sondern eine Prüfzeile: wenn zwei Leute ein
+geteiltes Ergebnis vergleichen, müssen sie wissen, ob sie **dieselbe
+Version** und **dieselben Regeln** gespielt haben. Eine alte Partie aus der
+Zeit vor der Hausregel zeigt stattdessen „Altbestand: Farben dürfen sich
+wiederholen" — dann ist die abweichende Wertung erwartbar und kein Fehler.
+
+Die `Tagescode-Version` ist die Seed-Version des Tagesrätsel-Generators: sie
+ändert sich nur, wenn sich der Generator ändert, damit bereits
+veröffentlichte Rätsel nicht still verschoben werden.
+
 ## Spielen
 
 **Tastatur:** `1`–`6` setzt eine Farbe, `←`/`→` wechselt das Feld, `↑`/`↓` wechselt
@@ -87,12 +130,12 @@ python -m http.server 8123
 index.html   Struktur
 style.css    Gestaltung (helles und dunkles Farbschema)
 app.js       Regelwerk, Oberfläche, Trainer — ohne Framework
-tests/       Playwright-Suite (Regeln, Tastatur, Trainer, Altbestände)
+tests/       Playwright-Suite (Regeln, Tastatur, Trainer, Fortschritt, Eigenschaften)
 ```
 
 Drei Dateien fürs Spiel, kein Build-Schritt. Das komplette Regelwerk steckt in
 `app.js`; für Tests und Neugierige ist es zusätzlich unter `window.farbcode`
-erreichbar (`score`, `candidateCodes`, `analyze`, …).
+erreichbar (`score`, `candidateCodes`, `analyze`, `bestGuess`, `diagnosis`, …).
 
 ## Tests
 
@@ -106,8 +149,18 @@ npx playwright install chromium
 npm test
 ```
 
-Das Spiel selbst bleibt frei von Abhängigkeiten: `package.json` existiert nur für
-den Testlauf, es gibt weiterhin keinen Build-Schritt.
+Neben den Einzelfällen laufen **Eigenschaftstests** (Property-Tests): über
+hunderte simulierte Spiele wird geprüft, dass die wahre Lösung immer unter den
+Kandidaten bleibt, dass die Kandidatenzahl monoton fällt und dass jede
+Feststellung des Trainers für *alle* verbliebenen Kandidaten gilt. Genau diese
+Tests haben den Fehler gefunden, bei dem die Kandidatenliste nach dem Umbau
+immer 360 Einträge zeigte.
+
+### Version
+
+`package.json` und `app.js` führen dieselbe Versionsnummer (`APP_VERSION`).
+Die Suite schlägt fehl, wenn die beiden auseinanderlaufen. Nach einer sichtbaren
+Änderung wird die Nummer in **beiden** Dateien hochgezählt.
 
 ## Datenschutz
 

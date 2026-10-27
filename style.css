@@ -294,6 +294,43 @@ body {
 }
 .palette-btn .peg { width: 100%; max-width: 26px; }
 
+/* ---------- progress display ---------- */
+
+.progress-track {
+  height: 6px; border-radius: 999px; background: var(--bg);
+  border: 1px solid var(--line); overflow: hidden; margin: 10px 0 6px;
+}
+.progress-track > span {
+  display: block; height: 100%; width: 0%;
+  background: var(--accent); transition: width .3s ease;
+}
+.progress-pct {
+  margin: 0; font-size: 0.76rem; color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.progress-best {
+  margin: 10px 0 0; font-size: 0.85rem; line-height: 1.5;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
+}
+.progress-best .peg { width: 16px; }
+.progress-worst { color: var(--muted); font-size: 0.78rem; }
+
+.cand-walk {
+  margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--line);
+}
+.cand-walk.is-best .cand-pegs .peg { filter: drop-shadow(0 0 0 var(--accent)); }
+.cand-label {
+  margin: 0 0 6px; font-size: 0.74rem; color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.cand-pegs { display: flex; gap: 6px; }
+.cand-pegs .peg { width: 20px; }
+.cand-note {
+  margin: 6px 0 0; font-size: 0.74rem; color: var(--accent); min-height: 1em;
+}
+.cand-actions { display: flex; gap: 8px; margin-top: 10px; }
+.cand-actions .ghost-btn { flex: 1; }
+
 .hint { margin: 0; font-size: 0.78rem; color: var(--muted); }
 kbd {
   font-family: var(--font-mono); font-size: 0.72rem;
@@ -392,6 +429,7 @@ kbd {
 .site-footer p { margin: 0 0 4px; }
 .footer-links { display: flex; gap: 8px; align-items: center; }
 .site-footer a { color: var(--accent); }
+.footer-meta { margin-top: 10px; font-size: 0.75rem; opacity: 0.72; font-variant-numeric: tabular-nums; }
 
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; animation: none !important; }

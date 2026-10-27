@@ -305,6 +305,321 @@ async function main() {
     assert.ok(!pegs.includes(6), `6 Felder bei 5 Farben angeboten: ${pegs.join(',')}`);
   });
 
+  console.log('\nFortschrittsanzeige (Minimax)\n');
+
+  await check('Der Minimax-Zug ist nicht schlechter als jeder andere Kandidat', async () => {
+    await reset();
+    const res = await page.evaluate(() => {
+      const f = window.farbcode;
+      const cands = f.candidateCodes();
+      const chosen = f.bestGuess(cands);
+      const worstOf = (g) => {
+        const groups = new Map();
+        for (const s of cands) {
+          const r = f.scoreFast(g, s);
+          const key = r.exact * 10 + r.near;
+          groups.set(key, (groups.get(key) || 0) + 1);
+        }
+        let worst = 0;
+        for (const n of groups.values()) if (n > worst) worst = n;
+        return worst;
+      };
+      let bestPossible = Infinity;
+      for (const g of cands) bestPossible = Math.min(bestPossible, worstOf(g));
+      return {
+        count: cands.length,
+        chosenWorst: chosen.worst,
+        bestPossible,
+        chosenIsCandidate: cands.some((c) => c.join() === chosen.guess.join()),
+        distinct: new Set(chosen.guess).size === chosen.guess.length,
+      };
+    });
+    assert.ok(res.chosenIsCandidate, 'der gewählte Zug ist kein Kandidat');
+    assert.ok(res.distinct, 'der gewählte Zug hat eine Farbe doppelt');
+    assert.strictEqual(res.chosenWorst, res.bestPossible,
+      `schlechtester Fall ${res.chosenWorst}, bestmöglich ${res.bestPossible}`);
+  });
+
+  await check('Der Minimax-Zug teilt die Kandidaten auf', async () => {
+    await reset();
+    const res = await page.evaluate(() => {
+      const f = window.farbcode;
+      const cands = f.candidateCodes();
+      const b = f.bestGuess(cands);
+      return { n: cands.length, worst: b.worst, groups: b.groups };
+    });
+    assert.ok(res.worst < res.n, `schlimmster Fall ${res.worst} bei ${res.n} Kandidaten`);
+    assert.ok(res.groups > 1, 'der Zug teilt die Kandidaten nicht auf');
+  });
+
+  await check('Die Minimax-Suche ist schnell genug für jeden Zug', async () => {
+    await reset();
+    const ms = await page.evaluate(() => {
+      const t0 = performance.now();
+      window.farbcode.bestGuess(window.farbcode.candidateCodes());
+      return performance.now() - t0;
+    });
+    assert.ok(ms < 1500, `Minimax brauchte ${Math.round(ms)} ms`);
+  });
+
+  await check('Die Fortschrittsanzeige nennt die Kandidatenzahl', async () => {
+    await reset();
+    const text = await page.textContent('#progress-count');
+    assert.ok(/360/.test(text), `Text: "${text}"`);
+    const pct = await page.textContent('#progress-pct');
+    assert.strictEqual(pct.trim(), '0%');
+  });
+
+  await check('Nach einem Zug sinkt die Kandidatenzahl', async () => {
+    await reset();
+    const before = await page.textContent('#progress-count');
+    await page.keyboard.press('1');
+    await page.keyboard.press('2');
+    await page.keyboard.press('3');
+    await page.keyboard.press('4');
+    await page.keyboard.press('Enter');
+    await page.waitForTimeout(400);
+    const after = await page.textContent('#progress-count');
+    assert.ok(before !== after, `unverändert: "${after}"`);
+    const pct = await page.textContent('#progress-pct');
+    assert.ok(pct.trim() !== '0%', `Fortschritt blieb bei ${pct}`);
+  });
+
+  await check('Die Kandidaten kommen einzeln: „Weiter" blättert weiter', async () => {
+    await reset();
+    const first = await page.textContent('#cand-label');
+    assert.ok(/Kandidat 1 von|Candidate 1 of/.test(first), `Beschriftung: "${first}"`);
+    const pegs1 = await page.innerHTML('#cand-pegs');
+    await page.click('#cand-next');
+    await page.waitForTimeout(150);
+    const second = await page.textContent('#cand-label');
+    assert.notStrictEqual(first, second, 'die Beschriftung hat sich nicht bewegt');
+    const pegs2 = await page.innerHTML('#cand-pegs');
+    assert.notStrictEqual(pegs1, pegs2, 'die Kandidaten haben sich nicht bewegt');
+  });
+
+  await check('„Zurück" geht zurück (und um den Anfang herum)', async () => {
+    await reset();
+    await page.click('#cand-next');
+    await page.waitForTimeout(120);
+    const after = await page.textContent('#cand-label');
+    await page.click('#cand-prev');
+    await page.waitForTimeout(120);
+    const back = await page.textContent('#cand-label');
+    assert.notStrictEqual(after, back, '„Zurück" hat nichts bewegt');
+    const first = await page.textContent('#cand-label');
+    await page.click('#cand-prev');
+    await page.waitForTimeout(120);
+    const wrapped = await page.textContent('#cand-label');
+    assert.notStrictEqual(back, wrapped, 'der Sprung über den Anfang fehlt');
+    assert.strictEqual(first, back, '„Zurück" ist nicht symmetrisch');
+  });
+
+  await check('Der stärkste Zug ist unter den Kandidaten markiert', async () => {
+    await reset();
+    const res = await page.evaluate(() => {
+      const f = window.farbcode;
+      const best = f.bestGuess(f.candidateCodes());
+      const idx = f.candidateCodes().findIndex((c) => c.join() === best.guess.join());
+      return { idx, total: f.candidateCodes().length };
+    });
+    for (let i = 0; i < res.idx; i++) {
+      await page.click('#cand-next');
+      await page.waitForTimeout(40);
+    }
+    const note = await page.textContent('#cand-note');
+    assert.ok(/stärkste|stärksten|stärkste Zug|strongest/.test(note), `Notiz: "${note}"`);
+    const isBest = await page.evaluate(() => document.querySelector('#cand-walk').classList.contains('is-best'));
+    assert.ok(isBest, 'der Kandidat ist nicht als bester markiert');
+  });
+
+  await check('Der Coach nennt den Minimax-Zug', async () => {
+    await reset();
+    const hints = await page.evaluate(() => window.farbcode.buildHints());
+    // Die Seite läuft je nach Browser-Sprache auf Deutsch oder Englisch —
+    // der Hinweis muss in beiden Fassungen den Minimax-Zug nennen.
+    assert.ok(hints.some((h) => /stärkste|stärksten|strongest/i.test(h)),
+      `Hinweise: ${JSON.stringify(hints).slice(0, 200)}`);
+  });
+
+  console.log('\nEigenschaften (Property-Tests)\n');
+
+  /* The old property test ran against the variant without the house rule.
+     The distinct variant needs its own — otherwise a bug in the filter
+     (the candidate list always full) would stay invisible. */
+
+  await check('Die wahre Lösung bleibt unter den Kandidaten (400 Spiele)', async () => {
+    await reset();
+    const res = await page.evaluate(() => {
+      const f = window.farbcode;
+      const s = f.state;
+      const bad = [];
+      let moves = 0;
+      for (let game = 0; game < 400; game++) {
+        const code = f.randomCode(4, 6);
+        s.code = code;
+        s.guesses = [];
+        for (let move = 0; move < 6; move++) {
+          const guess = f.randomCode(4, 6);
+          const { exact, near } = f.score(guess, code);
+          s.guesses.push({ guess, exact, near });
+          moves++;
+          const cands = f.candidateCodes();
+          if (!cands.some((c) => c.join() === code.join())) {
+            bad.push(`Spiel ${game}, Zug ${move}: ${code.join()} fehlt in ${cands.length} Kandidaten`);
+            break;
+          }
+          if (cands.length === 1) break;
+        }
+      }
+      return { bad, moves };
+    });
+    assert.strictEqual(res.bad.length, 0, res.bad.slice(0, 3).join(' | '));
+    assert.ok(res.moves > 1000, `nur ${res.moves} Züge geprüft`);
+  });
+
+  await check('Die Kandidatenzahl sinkt monoton (400 Spiele)', async () => {
+    await reset();
+    const res = await page.evaluate(() => {
+      const f = window.farbcode;
+      const s = f.state;
+      const bad = [];
+      let steps = 0;
+      for (let game = 0; game < 400; game++) {
+        const code = f.randomCode(4, 6);
+        s.code = code;
+        s.guesses = [];
+        let prev = f.candidateCodes().length;
+        for (let move = 0; move < 6; move++) {
+          const guess = f.randomCode(4, 6);
+          const { exact, near } = f.score(guess, code);
+          s.guesses.push({ guess, exact, near });
+          steps++;
+          const now = f.candidateCodes().length;
+          if (now > prev) { bad.push(`Spiel ${game}, Zug ${move}: ${prev} -> ${now}`); break; }
+          prev = now;
+          if (now === 1) break;
+        }
+      }
+      return { bad, steps };
+    });
+    assert.strictEqual(res.bad.length, 0, res.bad.slice(0, 3).join(' | '));
+    assert.ok(res.steps > 1000, `nur ${res.steps} Züge geprüft`);
+  });
+
+  await check('Jede Feststellung gilt für alle Kandidaten (120 Spiele)', async () => {
+    await reset();
+    const res = await page.evaluate(() => {
+      const f = window.farbcode;
+      const s = f.state;
+      const bad = [];
+      const countOf = (cand, color) => cand.filter((x) => x === color).length;
+      let factsChecked = 0;
+      for (let game = 0; game < 120; game++) {
+        const code = f.randomCode(4, 6);
+        s.code = code;
+        s.guesses = [];
+        for (let move = 0; move < 5; move++) {
+          const guess = f.randomCode(4, 6);
+          const { exact, near } = f.score(guess, code);
+          s.guesses.push({ guess, exact, near });
+          const { cands, facts } = f.analyze();
+          for (const fact of facts) {
+            factsChecked++;
+            for (const cand of cands) {
+              const n = countOf(cand, fact.color);
+              let holds;
+              if (fact.type === 'pos') holds = cand[fact.p] === fact.color;
+              else if (fact.type === 'absent') holds = n === 0;
+              else if (fact.type === 'count') holds = n === fact.k;
+              else if (fact.type === 'present') holds = n >= 1;
+              else holds = n >= 0;                       // 'open' — noch möglich
+              if (!holds) {
+                bad.push(`Spiel ${game}, Zug ${move}: ${fact.type}(${fact.color}) gilt nicht für ${cand.join()}`);
+                break;
+              }
+            }
+            // Die wahre Lösung selbst muss jede Feststellung erfüllen.
+            const nTrue = countOf(code, fact.color);
+            const trueHolds = fact.type === 'pos' ? code[fact.p] === fact.color
+              : fact.type === 'absent' ? nTrue === 0
+              : fact.type === 'count' ? nTrue === fact.k
+              : fact.type === 'present' ? nTrue >= 1
+              : true;
+            if (!trueHolds) {
+              bad.push(`Spiel ${game}, Zug ${move}: ${fact.type}(${fact.color}) widerspricht der Lösung ${code.join()}`);
+              break;
+            }
+          }
+          if (bad.length) break;
+          if (cands.length === 1) break;
+        }
+        if (bad.length) break;
+      }
+      return { bad, factsChecked };
+    });
+    assert.strictEqual(res.bad.length, 0, res.bad.slice(0, 3).join(' | '));
+    assert.ok(res.factsChecked > 200, `nur ${res.factsChecked} Feststellungen geprüft`);
+  });
+
+  await check('Der Altbestand (Wiederholungen erlaubt) besteht die Eigenschaften', async () => {
+    await reset();
+    const res = await page.evaluate(() => {
+      const f = window.farbcode;
+      const s = f.state;
+      s.rules = 'repeat';
+      const bad = [];
+      let moves = 0;
+      for (let game = 0; game < 60; game++) {
+        const code = [];
+        for (let i = 0; i < 4; i++) code.push(Math.floor(Math.random() * 6));
+        s.code = code;
+        s.guesses = [];
+        for (let move = 0; move < 5; move++) {
+          const guess = [];
+          for (let i = 0; i < 4; i++) guess.push(Math.floor(Math.random() * 6));
+          const { exact, near } = f.score(guess, code);
+          s.guesses.push({ guess, exact, near });
+          moves++;
+          const cands = f.candidateCodes();
+          if (!cands.some((c) => c.join() === code.join())) {
+            bad.push(`Spiel ${game}, Zug ${move}: ${code.join()} fehlt`);
+            break;
+          }
+          if (cands.length === 1) break;
+        }
+      }
+      return { bad, moves };
+    });
+    assert.strictEqual(res.bad.length, 0, res.bad.slice(0, 3).join(' | '));
+    assert.ok(res.moves > 100, `nur ${res.moves} Züge geprüft`);
+  });
+
+  console.log('\nVersionsanzeige\n');
+
+  await check('Der Footer nennt die Version, die Regel und die Rätsel-Version', async () => {
+    await reset();
+    const meta = (await page.textContent('#footer-meta')).trim();
+    assert.ok(/1\.2\.0/.test(meta), `Footer: "${meta}"`);
+    assert.ok(/v2/.test(meta), `Seed-Version fehlt: "${meta}"`);
+    assert.ok(/Hausregel|house rule/i.test(meta), `Regel fehlt: "${meta}"`);
+  });
+
+  await check('Die Version im Footer stimmt mit package.json überein', async () => {
+    const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8'));
+    await reset();
+    const shown = await page.evaluate(() => window.farbcode.APP_VERSION);
+    assert.strictEqual(shown, pkg.version,
+      `app.js sagt ${shown}, package.json sagt ${pkg.version}`);
+  });
+
+  await check('Die Diagnose nennt die Version', async () => {
+    await reset();
+    const diag = await page.evaluate(() => window.farbcode.diagnosis());
+    assert.ok(/^\d+\.\d+\.\d+$/.test(diag.version), `Version: "${diag.version}"`);
+    assert.ok(['distinct', 'repeat'].includes(diag.regeln), `Regeln: "${diag.regeln}"`);
+  });
+
   await browser.close();
   server.close();
 

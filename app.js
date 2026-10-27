@@ -16,6 +16,11 @@
     { id: 'cyan',   hex: '#12a4b8', shape: 'hexagon' },
   ];
 
+  /* The version shown in the footer and in the bug report. package.json
+     carries the same number — the test suite fails if the two drift apart.
+     Bump it whenever the game changes in a way a player could notice. */
+  const APP_VERSION = '1.2.0';
+
   const SHAPES = {
     circle:   '<circle cx="12" cy="12" r="8.8"/>',
     square:   '<rect x="3.6" y="3.6" width="16.8" height="16.8" rx="2.6"/>',
@@ -41,6 +46,16 @@
       'duo.guessTitle': 'Du bist am Zug', 'duo.guessSub': 'Der Code bleibt verdeckt, bis das Spiel endet.',
       'action.submit': 'Raten', 'action.newGame': 'Neues Spiel',
       'palette.title': 'Farben', 'palette.hint': 'Tastatur: 1–6 setzt eine Farbe, ←/→ wechselt das Feld, ↑/↓ wechselt die Farbe im Feld, Enter bestätigt, Backspace leert.', 'palette.used': 'bereits vergeben',
+      'progress.title': 'Fortschritt',
+      'progress.count': '{n} von {total} Kombinationen passen noch',
+      'progress.none': 'Keine Kombination passt zu deinen Zügen.',
+      'progress.best': 'Bester Zug',
+      'progress.worst': '— im schlimmsten Fall bleiben {n}',
+      'progress.solved': 'Die Lösung ist',
+      'progress.cand': 'Kandidat {i} von {n}',
+      'progress.isBest': '★ der stärkste Zug',
+      'progress.prev': 'Zurück',
+      'progress.next': 'Weiter',
       'settings.title': 'Einstellungen', 'settings.pegs': 'Länge', 'settings.colors': 'Farben',
       'settings.guesses': 'Versuche', 'settings.apply': 'Neues Spiel starten',
       'share.title': 'Teilen',
@@ -81,6 +96,7 @@
       'train.hintOpen': '{color} ist noch möglich.',
       'train.hintMore': 'Noch {n} Kombinationen sind möglich.',
       'train.hintOne': 'Genau eine Kombination ist noch möglich.',
+      'train.hintBest': 'Der stärkste Zug ist {code} — selbst im schlimmsten Fall bleiben danach nur {n} Kombinationen.',
       'train.hintSolution': 'Die einzige mögliche Kombination: {code}.',
       'train.logTitle': 'Lage',
       'train.logNone': 'Noch keine Züge — der Trainer kann noch nichts schließen.',
@@ -91,6 +107,10 @@
       'train.diagnose': 'Diagnose kopieren',
       'train.diagnoseCopied': 'Diagnose kopiert — bitte im Chat einfügen.',
       'footer.tagline': 'ein modernes Farb-Rate-Spiel', 'footer.about': 'Über das Spiel',
+      'footer.privacy': 'Kein Konto, keine Cookies, kein Tracking, kein Server.',
+      'footer.version': 'Version', 'footer.seed': 'Tagescode-Version',
+      'footer.rulesDistinct': 'Hausregel: jede Farbe höchstens einmal',
+      'footer.rulesRepeat': 'Altbestand: Farben dürfen sich wiederholen',
       'status.guess': 'Zug {n} von {max}',
       'status.exact1': '{n} richtige Farbe an richtiger Stelle',
       'status.exactN': '{n} richtige Farben an richtiger Stelle',
@@ -131,6 +151,16 @@
       'duo.guessTitle': 'Your turn', 'duo.guessSub': 'The code stays hidden until the game ends.',
       'action.submit': 'Guess', 'action.newGame': 'New game',
       'palette.title': 'Colours', 'palette.hint': 'Keyboard: 1–6 sets a colour, ←/→ moves the slot, ↑/↓ cycles the colour, Enter confirms, Backspace clears.', 'palette.used': 'already used',
+      'progress.title': 'Progress',
+      'progress.count': '{n} of {total} combinations still fit',
+      'progress.none': 'No combination fits your moves.',
+      'progress.best': 'Best guess',
+      'progress.worst': '— at worst {n} remain',
+      'progress.solved': 'The solution is',
+      'progress.cand': 'Candidate {i} of {n}',
+      'progress.isBest': '★ the strongest move',
+      'progress.prev': 'Back',
+      'progress.next': 'Next',
       'settings.title': 'Settings', 'settings.pegs': 'Length', 'settings.colors': 'Colours',
       'settings.guesses': 'Guesses', 'settings.apply': 'Start a new game',
       'share.title': 'Share',
@@ -171,6 +201,7 @@
       'train.hintOpen': '{color} is still possible.',
       'train.hintMore': '{n} combinations are still possible.',
       'train.hintOne': 'Exactly one combination is still possible.',
+      'train.hintBest': 'The strongest move is {code} — even in the worst case only {n} combinations remain afterwards.',
       'train.hintSolution': 'The only possible combination: {code}.',
       'train.logTitle': 'Where things stand',
       'train.logNone': 'No moves yet — the coach cannot deduce anything.',
@@ -181,6 +212,10 @@
       'train.diagnose': 'Copy diagnosis',
       'train.diagnoseCopied': 'Diagnosis copied — please paste it in the chat.',
       'footer.tagline': 'a modern take on the colour guessing game', 'footer.about': 'About the game',
+      'footer.privacy': 'No account, no cookies, no tracking, no server.',
+      'footer.version': 'Version', 'footer.seed': 'Daily puzzle version',
+      'footer.rulesDistinct': 'House rule: every colour at most once',
+      'footer.rulesRepeat': 'Older game: colours may repeat',
       'status.guess': 'Move {n} of {max}',
       'status.exact1': '{n} right colour, right place',
       'status.exactN': '{n} right colours, right place',
@@ -231,6 +266,8 @@
     // Trainer: a scripted round that explains the markers, plus a logic hint
     // that is derived from the moves the player has already made.
     train: { step: 0, returnTo: null },
+    // Which candidate the progress display is currently showing.
+    candStep: 0,
     hintIndex: 0,
     hintFor: -1,
     hintSeen: [],
@@ -431,6 +468,7 @@
     state.rules = 'distinct';
     state.hintIndex = 0;
     state.hintText = '';
+    state.candStep = 0;
     saveTrain();
     render();
   }
@@ -499,6 +537,16 @@
     return { exact, near };
   }
 
+  /* A candidate has to explain every move the player has made — otherwise
+     it is not a candidate at all. */
+  function fitsGuesses(cand) {
+    for (const g of state.guesses) {
+      const s = scoreFast(g.guess, cand);
+      if (s.exact !== g.exact || s.near !== g.near) return false;
+    }
+    return true;
+  }
+
   function candidateCodes() {
     const { pegs, colors } = state.settings;
     const out = [];
@@ -509,7 +557,10 @@
       const used = new Array(colors).fill(false);
       const cur = [];
       const walk = (depth) => {
-        if (depth === pegs) { out.push(cur.slice()); return; }
+        if (depth === pegs) {
+          if (fitsGuesses(cur)) out.push(cur.slice());
+          return;
+        }
         for (let c = 0; c < colors; c++) {
           if (used[c]) continue;
           used[c] = true; cur.push(c);
@@ -522,15 +573,61 @@
       const total = Math.pow(colors, pegs);
       for (let n = 0; n < total; n++) {
         const cand = codeFromNumber(n, pegs, colors);
-        let fits = true;
-        for (const g of state.guesses) {
-          const s = scoreFast(g.guess, cand);
-          if (s.exact !== g.exact || s.near !== g.near) { fits = false; break; }
-        }
-        if (fits) out.push(cand);
+        if (fitsGuesses(cand)) out.push(cand);
       }
     }
     return out;
+  }
+
+  /* How many codes are possible in principle — the denominator of the
+     progress display. With the house rule that is the number of
+     permutations, without it the number of combinations. */
+  function totalCodes() {
+    const { pegs, colors } = state.settings;
+    if (state.rules === 'distinct') {
+      let n = 1;
+      for (let i = 0; i < pegs; i++) n *= colors - i;
+      return n;
+    }
+    return Math.pow(colors, pegs);
+  }
+
+  /* The strongest next move: the guess that splits the remaining candidates
+     best. For every possible guess we count how many candidates would
+     survive the worst feedback it could get, and we take the guess with the
+     smallest worst case. This is the principle a Mastermind solver plays by
+     (Knuth) — and it works here without any external table. */
+  function bestGuess(cands) {
+    if (!cands || !cands.length) return null;
+    if (cands.length === 1) return { guess: cands[0], worst: 0, groups: 1 };
+    let best = null;
+    for (const g of cands) {
+      const groups = new Map();
+      for (const s of cands) {
+        const { exact, near } = scoreFast(g, s);
+        const key = exact * 10 + near;
+        groups.set(key, (groups.get(key) || 0) + 1);
+      }
+      let worst = 0;
+      for (const n of groups.values()) if (n > worst) worst = n;
+      if (!best || worst < best.worst) best = { guess: g, worst, groups: groups.size };
+      if (best.worst === 0) break;   // cannot be beaten
+    }
+    return best;
+  }
+
+  /* The candidate list only depends on the moves, the settings and the rule.
+     The minimax search is the expensive part, so its result is remembered
+     until one of those changes. */
+  let progressCache = null;
+
+  function progressInfo() {
+    const key = `${state.rules}|${state.settings.pegs}x${state.settings.colors}|${JSON.stringify(state.guesses)}`;
+    if (progressCache && progressCache.key === key) return progressCache.value;
+    const cands = candidateCodes();
+    const value = { cands, best: bestGuess(cands), total: totalCodes() };
+    progressCache = { key, value };
+    return value;
   }
 
   function analyze() {
@@ -573,7 +670,16 @@
   function codeText(code) { return code.map(colorName).join(' '); }
 
   function buildHints() {
-    if (!state.guesses.length) return [t('train.hintFirst')];
+    if (!state.guesses.length) {
+      // Before the first move the most valuable hint is the strongest opener.
+      const cands = candidateCodes();
+      const best = bestGuess(cands);
+      const hints = [t('train.hintFirst')];
+      if (best && cands.length > 1) {
+        hints.push(t('train.hintBest', { code: best.guess.map(colorName).join(' '), n: best.worst }));
+      }
+      return hints;
+    }
     const { cands, facts } = analyze();
     const order = { pos: 0, count: 1, absent: 2, present: 3, open: 4 };
     const hints = [];
@@ -586,6 +692,10 @@
       else if (f.type === 'present') hints.push(t('train.hintPresent', { color: colorName(f.color) }));
       else if (f.type === 'count') hints.push(t('train.hintCount', { color: colorName(f.color), k: f.k }));
       else if (f.type === 'open') hints.push(t('train.hintOpen', { color: colorName(f.color) }));
+    }
+    const best = bestGuess(cands);
+    if (best && cands.length > 1) {
+      hints.push(t('train.hintBest', { code: best.guess.map(colorName).join(' '), n: best.worst }));
     }
     hints.push(cands.length === 1 ? t('train.hintOne') : t('train.hintMore', { n: cands.length }));
     return hints;
@@ -626,7 +736,8 @@
     const { cands, facts } = currentAnalysis();
     return {
       spiel: 'Farbcode',
-      stand: '2026-10-26',
+      version: APP_VERSION,
+      regeln: state.rules,
       modus: state.mode,
       datum: state.date,
       einstellungen: state.settings,
@@ -816,6 +927,55 @@
     btn.classList.add('is-blocked');
   }
 
+  /* The progress display: how much of the search space the feedback has
+     already closed, which move would close the most, and the candidates
+     themselves — one after another, not all at once. */
+  function renderProgress() {
+    const panel = $('#progress-panel');
+    const visible = state.mode !== 'train' && !(state.mode === 'duo' && state.phase === 'setup');
+    panel.classList.toggle('hidden', !visible);
+    if (!visible) return;
+
+    const { cands, best, total } = progressInfo();
+    const n = cands.length;
+    if (!n) {
+      $('#progress-count').textContent = t('progress.none');
+      $('#progress-fill').style.width = '0%';
+      $('#progress-pct').textContent = '0%';
+      $('#progress-best').hidden = true;
+      $('#cand-walk').hidden = true;
+      return;
+    }
+
+    if (state.candStep >= n) state.candStep = n - 1;
+    if (state.candStep < 0) state.candStep = 0;
+
+    const pct = total ? Math.round((1 - n / total) * 100) : 0;
+    $('#progress-count').textContent = t('progress.count', { n, total });
+    $('#progress-fill').style.width = `${pct}%`;
+    $('#progress-pct').textContent = `${pct}%`;
+
+    const bestEl = $('#progress-best');
+    if (n === 1) {
+      bestEl.hidden = false;
+      bestEl.innerHTML = `${t('progress.solved')}: ${cands[0].map((c) => `<span class="peg">${pegSvg(c)}</span>`).join('')}`;
+    } else if (best) {
+      bestEl.hidden = false;
+      bestEl.innerHTML = `${t('progress.best')}: ${best.guess.map((c) => `<span class="peg">${pegSvg(c)}</span>`).join('')} <span class="progress-worst">${t('progress.worst', { n: best.worst })}</span>`;
+    } else {
+      bestEl.hidden = true;
+    }
+
+    const walk = $('#cand-walk');
+    walk.hidden = false;
+    const cur = cands[state.candStep];
+    const isBest = !!(best && n > 1 && cur.join() === best.guess.join());
+    walk.classList.toggle('is-best', isBest);
+    $('#cand-label').textContent = t('progress.cand', { i: state.candStep + 1, n });
+    $('#cand-pegs').innerHTML = cur.map((c) => `<span class="peg">${pegSvg(c)}</span>`).join('');
+    $('#cand-note').textContent = isBest ? t('progress.isBest') : '';
+  }
+
   function renderSettings() {
     const set = (id, options, current) => {
       const el = $(id);
@@ -886,6 +1046,21 @@
     }
   }
 
+  /* The footer states which build is running and — more importantly — which
+     rule set and which puzzle generator produced the game in front of the
+     player. Two people comparing a shared result need to know whether they
+     played the same rules; that is exactly what this line settles. */
+  function renderFooterMeta() {
+    const box = $('#footer-meta');
+    if (!box) return;
+    const parts = [
+      `${t('footer.version')} ${APP_VERSION}`,
+      `${t('footer.seed')} ${DAILY_SEED_VERSION}`,
+      t(state.rules === 'repeat' ? 'footer.rulesRepeat' : 'footer.rulesDistinct'),
+    ];
+    box.textContent = parts.join(' · ');
+  }
+
   function render() {
     // Keep the keyboard focus on the slot the player is editing: every render
     // replaces the buttons, so without this the focus would drop to the body.
@@ -923,7 +1098,9 @@
       if (state.over) renderResult();
     }
 
+    renderProgress();
     renderTrainer();
+    renderFooterMeta();
 
     if (focusIndex !== null) {
       const scope = (isDuo && state.phase === 'setup') ? '#duo-slots' : '#current-slots';
@@ -1016,6 +1193,8 @@
     const guess = state.current.slice();
     const { exact, near } = score(guess, state.code);
     state.guesses.push({ guess, exact, near });
+    // A new move means a new candidate list — the walk starts at the top again.
+    state.candStep = 0;
     // The facts the coach can deduce change with every move.
     state.hintText = '';
     const detail = describe(guess, exact, near);
@@ -1272,6 +1451,21 @@
     $('#trainer-hint').addEventListener('click', showNextHint);
     $('#trainer-diagnose').addEventListener('click', copyDiagnosis);
 
+    // The candidates are walked through one by one — the whole list at once
+    // would be noise, one candidate at a time is a place to look.
+    $('#cand-prev').addEventListener('click', () => {
+      const { cands } = progressInfo();
+      if (!cands.length) return;
+      state.candStep = (state.candStep - 1 + cands.length) % cands.length;
+      renderProgress();
+    });
+    $('#cand-next').addEventListener('click', () => {
+      const { cands } = progressInfo();
+      if (!cands.length) return;
+      state.candStep = (state.candStep + 1) % cands.length;
+      renderProgress();
+    });
+
     $('#apply-settings').addEventListener('click', () => {
       const pegs = Number($('#set-pegs [aria-pressed="true"]').dataset.value);
       const colors = Number($('#set-colors [aria-pressed="true"]').dataset.value);
@@ -1374,10 +1568,16 @@
     candidateCodes,
     analyze,
     buildHints,
+    bestGuess,
+    progressInfo,
+    totalCodes,
+    diagnosis,
     render,
     COLORS,
     TRAIN_CODE,
     TRAIN_STEPS,
+    APP_VERSION,
+    DAILY_SEED_VERSION,
   };
 
   function init() {
